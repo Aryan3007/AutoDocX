@@ -9,6 +9,7 @@ declare module "next-auth" {
       email?: string | null;
       image?: string | null;
     };
+    accessToken?: string;
   }
 }
 
@@ -20,27 +21,40 @@ const handler = NextAuth({
     })
   ],
   callbacks: {
+    async jwt({ token, account }) {
+      // First time login: store GitHub access token
+      if (account?.access_token) {
+        token.accessToken = account.access_token;
+      }
+      return token;
+    },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.sub || "default-id"
+        session.user.id = token.sub || "default-id";
+        // Expose GitHub access token in session
+        session.accessToken = token.accessToken as string;
       }
-      return session
-    }
-  }
-})
+      return session;
+    },
+  },
+});
 
 export const authOptions = {
   providers: [
     GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: process.env.GITHUB_CLIENT_ID || (() => { throw new Error("GITHUB_CLIENT_ID is not defined") })(),
+      clientSecret: process.env.GITHUB_CLIENT_SECRET || (() => { throw new Error("GITHUB_CLIENT_SECRET is not defined") })(),
     }),
   ],
   pages: {
     signIn: "/login", // Optional: use custom login page
   },
   callbacks: {
-    async redirect({ baseUrl }: { url: string; baseUrl: string }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      // Ensure the redirect works for both dashboard and navbar
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
       return baseUrl + "/dashboard";
     },
   },
