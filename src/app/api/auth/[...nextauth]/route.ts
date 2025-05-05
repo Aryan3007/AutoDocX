@@ -17,8 +17,14 @@ const handler = NextAuth({
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID || (() => { throw new Error("GITHUB_CLIENT_ID is not defined") })(),
-      clientSecret: process.env.GITHUB_CLIENT_SECRET || (() => { throw new Error("GITHUB_CLIENT_SECRET is not defined") })()
+      clientSecret: process.env.GITHUB_CLIENT_SECRET || (() => { throw new Error("GITHUB_CLIENT_SECRET is not defined") })(),
+      authorization: {
+        params: {
+          scope: "read:user repo",
+        },
+      },
     })
+    
   ],
   callbacks: {
     async jwt({ token, account }) {

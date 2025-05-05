@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { PanelLeft, Share2, MoreVertical, LogOut } from "lucide-react"
+import { PanelLeft, Share2, MoreVertical } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { usePathname } from "next/navigation"
@@ -25,7 +25,7 @@ console.log(session);
   }
 
   return (
-    <header className="flex items-center justify-between h-14 px-8 w-full">
+    <header className="flex items-center border-b bg-white justify-between h-14 px-2 lg:px-8 w-full">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" onClick={toggleSidebar}>
           <PanelLeft className="h-5 w-5" />
@@ -33,8 +33,8 @@ console.log(session);
         </Button>
         <div className="flex items-center gap-2">
           <span className="font-semibold text-lg">AutoDocX</span>
-          <span className="text-muted-foreground">|</span>
-          <span className="text-muted-foreground">{getCurrentSection()}</span>
+          <span className="text-muted-foreground hidden md:inline">|</span>
+          <span className="text-muted-foreground hidden md:inline">{getCurrentSection()}</span>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -79,7 +79,6 @@ console.log(session);
             <DropdownMenuLabel>
               <div className="flex flex-col">
             <span className="font-semibold">{session?.user?.name ?? "User"}</span>
-            <span className="text-sm text-muted-foreground">{session?.user?.email ?? "user@example.com"}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -95,10 +94,7 @@ console.log(session);
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button className="fixed bottom-4 bg-white text-red-500 right-8" variant="ghost">
-            <LogOut/>
-            <h1>Exit</h1>
-        </Button>
+        
       </div>
     </header>
   )

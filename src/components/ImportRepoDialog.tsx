@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -109,35 +108,35 @@ export default function ImportRepoDialog() {
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          className="w-full justify-start gap-2 bg-black hover:bg-gray-900 hover:text-white text-white transition-colors"
+          className="w-fit justify-start gap-2 bg-black hover:bg-gray-900 hover:text-white text-white transition-colors"
         >
           <Github className="h-4 w-4" />
           <span>Import Repository</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Github className="h-5 w-5" />
             Import GitHub Repository
           </DialogTitle>
-          <DialogDescription>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Select a repository from your GitHub account to import
-          </DialogDescription>
+          </p>
         </DialogHeader>
         
         <div className="relative mt-2">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search repositories..."
-            className="pl-10 bg-gray-50 dark:bg-gray-900"
+            className="pl-10 md:w-full w-fit bg-gray-50 dark:bg-gray-900"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <Tabs defaultValue="all" className="mt-2">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid md:w-full w-fit grid-cols-3">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="public">Public</TabsTrigger>
             <TabsTrigger value="private">Private</TabsTrigger>
@@ -223,67 +222,67 @@ function RepoList({ repos, loading, formatDate, handleImport, selectedRepo }: Re
   return (
     <ScrollArea className="h-72">
       <div className="space-y-2 py-2">
-        {repos.map((repo) => (
-          <div
-            key={repo.id}
-            className={`border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all ${
-              selectedRepo?.id === repo.id ? "ring-2 ring-blue-500" : ""
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-start space-x-4">
-                <Image
-                  src={repo.owner.avatar_url}
-                  alt={repo.owner.login}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-sm truncate">{repo.full_name}</p>
-                    {repo.private && (
-                      <Badge variant="outline" className="flex items-center gap-1 h-5">
-                        <Lock className="h-3 w-3" />
-                        Private
-                      </Badge>
-                    )}
-                  </div>
-                  {repo.description && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
-                      {repo.description}
-                    </p>
-                  )}
-                  <div className="flex items-center mt-2 text-xs text-gray-500">
-                    <div className="flex items-center mr-4">
-                      <Star className="h-3 w-3 mr-1" />
-                      {repo.stargazers_count}
-                    </div>
-                    <div>Updated on {formatDate(repo.updated_at)}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2 ml-4">
-                <a
-                  href={repo.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-                <Button 
-                  onClick={() => handleImport(repo)}
-                  variant="default" 
-                  size="sm"
-                  className="whitespace-nowrap"
-                >
-                  Import
-                </Button>
-              </div>
+      {repos.map((repo) => (
+        <div
+        key={repo.id}
+        className={`border rounded-lg p-4 hover:bg-gray-50 transition-all ${
+          selectedRepo?.id === repo.id ? "ring-2 ring-blue-500" : ""
+        }`}
+        >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start space-x-4 min-w-0">
+          <Image
+            src={repo.owner.avatar_url}
+            alt={repo.owner.login}
+            width={40}
+            height={40}
+            className="rounded-full flex-shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+            <p className="font-medium text-sm truncate">{repo.full_name}</p>
+            {repo.private && (
+              <Badge variant="outline" className="flex items-center gap-1 h-5">
+              <Lock className="h-3 w-3" />
+              Private
+              </Badge>
+            )}
+            </div>
+            {repo.description && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">
+              {repo.description}
+            </p>
+            )}
+            <div className="flex flex-wrap items-center mt-2 text-xs text-gray-500 gap-4">
+            <div className="flex items-center">
+              <Star className="h-3 w-3 mr-1" />
+              {repo.stargazers_count}
+            </div>
+            <div>Updated on {formatDate(repo.updated_at)}</div>
             </div>
           </div>
-        ))}
+          </div>
+          <div className="flex gap-2 sm:ml-4">
+          <a
+            href={repo.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
+          <Button 
+            onClick={() => handleImport(repo)}
+            variant="default" 
+            size="sm"
+            className="whitespace-nowrap"
+          >
+            Import
+          </Button>
+          </div>
+        </div>
+        </div>
+      ))}
       </div>
     </ScrollArea>
   );

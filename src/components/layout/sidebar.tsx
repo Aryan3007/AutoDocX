@@ -1,7 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { X, Plus, Home, FileText, Github } from "lucide-react"
+import { X, Home, FileText, Github } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -31,7 +31,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
               onClick={() => setIsOpen(false)}
             />
           )}
@@ -41,7 +41,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
             exit={{ x: -320 }}
             transition={{ ease: "easeInOut", duration: 0.3 }}
             className={cn(
-              "fixed md:relative inset-y-0 left-0 z-50 w-72 bg-white rounded-2xl m-4 overflow-y-auto",
+              "fixed md:relative inset-y-0 left-0 z-50 w-72 bg-white lg:rounded-2xl lg:m-4 overflow-y-auto",
               isMobile ? "shadow-lg" : "",
             )}
           >
@@ -86,7 +86,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
                       )}
                     >
                       <FileText className="h-4 w-4" />
-                      <span>Documentation</span>
+                      <span>My Documentations</span>
                     </Link>
                   </nav>
                 </div>

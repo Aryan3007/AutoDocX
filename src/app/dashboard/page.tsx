@@ -1,12 +1,12 @@
 import ImportRepoDialog from "@/components/ImportRepoDialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Github, FileText, RefreshCw, Plus } from "lucide-react"
+import { Github, FileText, RefreshCw } from "lucide-react"
 import Link from "next/link"
 
 export default function DashboardPage() {
   return (
-    <div className="container mx-auto py-6 px-4 md:px-6 max-w-5xl">
+    <div className="container mx-auto py-6 px-4 md:px-6 max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center gap-2">
