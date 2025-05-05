@@ -47,7 +47,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
           >
             <div className="flex flex-col h-full">
               <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between ">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-xl gradient-text">AutoDocX</span>
                   </div>
@@ -58,10 +58,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
                     </Button>
                   )}
                 </div>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <Plus className="h-4 w-4" />
-                  <span>Import Repository</span>
-                </Button>
+                
               </div>
 
               <div className="flex-1 overflow-auto">

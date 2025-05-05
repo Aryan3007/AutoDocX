@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['cdn.rareblocks.xyz'],
+    domains: ['cdn.rareblocks.xyz', 'avatars.githubusercontent.com'],
   },
   env: {
     GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
