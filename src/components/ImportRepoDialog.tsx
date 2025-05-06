@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from "next/navigation";
 
 interface GitHubRepo {
   id: number;
@@ -94,13 +95,22 @@ export default function ImportRepoDialog() {
       year: 'numeric' 
     }).format(date);
   };
+  const router = useRouter();
 
+  // Add this inside the ImportRepoDialog component:
   const handleImport = (repo: GitHubRepo) => {
-    // Here you would implement the actual import logic
-    console.log("Importing repo:", repo.full_name);
+    // Create a URL-friendly slug from the repo name
+    const slug = repo.full_name.replace('/', '--').toLowerCase();
+      
+    // Store the selected repo info in localStorage for access in the new page
+    localStorage.setItem('selectedRepo', JSON.stringify(repo));
+    // Set the selected repo
     setSelectedRepo(repo);
-    // Close dialog after import
-    setTimeout(() => setOpen(false), 500);
+    // Close dialog
+    setOpen(false);
+      
+    // Use router.push to navigate programmatically
+    router.push(`/dashboard/generate-new-doc/${slug}`);
   };
 
   return (

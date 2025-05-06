@@ -5,6 +5,7 @@ import { X, Home, FileText, Github } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import { LogoutButton } from "../LogoutButton"
 
 type SidebarProps = {
   isOpen: boolean
@@ -41,7 +42,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
             exit={{ x: -320 }}
             transition={{ ease: "easeInOut", duration: 0.3 }}
             className={cn(
-              "fixed md:relative inset-y-0 left-0 z-50 w-72 bg-white lg:rounded-2xl lg:m-4 overflow-y-auto",
+              "fixed md:relative inset-y-0 left-0 z-50 w-72 bg-white lg:rounded-2xl lg:m-4 lg:mr-0 overflow-y-auto",
               isMobile ? "shadow-lg" : "",
             )}
           >
@@ -115,9 +116,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
               </div>
 
               <div className="p-4 mt-auto">
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <span className="text-primary">Upgrade plan</span>
-                </Button>
+                <LogoutButton/>
                 <p className="text-xs text-muted-foreground mt-1">More access to advanced features</p>
               </div>
             </div>

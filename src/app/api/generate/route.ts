@@ -5,7 +5,6 @@ import path from "path"
 import * as parser from "@babel/parser"
 import traverse from "@babel/traverse"
 
-// Add environment variable for Gemini API key
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
@@ -15,7 +14,6 @@ interface RouteInfo {
     handler: string
 }
 
-// Clone repository
 async function cloneRepo(repoUrl: string): Promise<string> {
     const tmpDir = path.join(process.cwd(), "tmp", Date.now().toString())
     await fs.mkdir(tmpDir, { recursive: true })
@@ -24,11 +22,10 @@ async function cloneRepo(repoUrl: string): Promise<string> {
     return tmpDir
 }
 
-// Find all JS files in the repository
 async function findJSFiles(dir: string): Promise<string[]> {
     const allFiles: string[] = []
 
-    async function traverse(currentDir: string) {
+    async function traverseDir(currentDir: string) {
         const files = await fs.readdir(currentDir)
 
         for (const file of files) {
@@ -36,18 +33,28 @@ async function findJSFiles(dir: string): Promise<string[]> {
             const stat = await fs.stat(fullPath)
 
             if (stat.isDirectory()) {
-                await traverse(fullPath)
+                await traverseDir(fullPath)
             } else if (file.endsWith(".js")) {
                 allFiles.push(fullPath)
             }
         }
     }
 
-    await traverse(dir)
+    await traverseDir(dir)
     return allFiles
 }
 
-// Extract API routes from the codebase
+function trimHandlerCode(handler: string): string {
+    // Remove long error logs and console statements
+    return handler
+        .replace(/console\.log\([^)]*\);?/g, '')
+        .replace(/res\.status\(500\).*?\};?/gs, '/* Internal error handling omitted */')
+        .replace(/\/\*.*?\*\//gs, '')
+        .split("\n")
+        .slice(0, 40) // keep only the first 40 lines
+        .join("\n")
+}
+
 async function extractApiInfo(repoPath: string): Promise<RouteInfo[]> {
     const jsFiles = await findJSFiles(repoPath)
     const routes: RouteInfo[] = []
@@ -60,8 +67,7 @@ async function extractApiInfo(repoPath: string): Promise<RouteInfo[]> {
                 plugins: ["jsx"],
             })
 
-            // Dynamically collect router variables
-            const routerVars = new Set(["app"]) // always include 'app' just in case
+            const routerVars = new Set(["app"])
 
             traverse(ast, {
                 VariableDeclarator({ node }) {
@@ -93,10 +99,10 @@ async function extractApiInfo(repoPath: string): Promise<RouteInfo[]> {
                         node.arguments.length >= 2 &&
                         node.arguments[0].type === "StringLiteral"
                     ) {
-                        const method = callee.property.name.toUpperCase()
+                        const method = callee.property.type === 'Identifier' ? callee.property.name.toUpperCase() : ''
                         const routePath = node.arguments[0].value
                         const handlerCode = (node.start != null && node.end != null)
-                            ? code.slice(node.start, node.end)
+                            ? trimHandlerCode(code.slice(node.start, node.end))
                             : ''
 
                         routes.push({ method, routePath, handler: handlerCode })
@@ -111,7 +117,6 @@ async function extractApiInfo(repoPath: string): Promise<RouteInfo[]> {
     return routes
 }
 
-// Generate documentation using Gemini AI
 async function callGemini(prompt: string): Promise<string> {
     if (!GEMINI_API_KEY) {
         throw new Error("GEMINI_API_KEY environment variable is not set")
@@ -145,57 +150,48 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Repository URL is required" }, { status: 400 })
         }
 
-        // Create a stream to send data back to the client
         const stream = new ReadableStream({
             async start(controller) {
                 try {
-                    const path = await cloneRepo(repoUrl)
-                    const routes = await extractApiInfo(path)
+                    const repoPath = await cloneRepo(repoUrl)
+                    const routes = await extractApiInfo(repoPath)
 
-                    // Process each route and generate documentation
                     for (const route of routes) {
-                        const prompt = `Generate a concise API documentation for this Express route:
+                        const prompt = `You are an API documentation generator.
 
-Endpoint: ${route.method} ${route.routePath}
+Generate concise, developer-friendly documentation for the following API route:
+Method: ${route.method}
+Path: ${route.routePath}
 
-Please include:
-1. Description: Brief overview of the endpoint's purpose
-2. Request:
-   - Headers (if any)
-   - Query Parameters (if any)
-   - Request Body (if any)
-3. Response:
-   - Success Response (200-299)
-   - Error Response (400-599)
-4. Example Usage (if applicable provide only curl example)
+Here is the route handler implementation:
+${route.handler}
 
-Source Code:
-${route.handler}`
+Your task is to:
+1. Provide a **brief description** (20–30 words max) of what this endpoint does.
+2. Include a **request JSON sample** (relevant body parameters only).
+3. Include a **response JSON sample** (typical success response).
+4. Mention common **status codes** with short explanations.
+
+Format the entire output using **clean and semantic HTML** with **inline CSS styles** for readability and structure.
+Use <h3>, <pre>, <code>, <ul>, <li>, and <p> with inline styles only.`
 
                         try {
                             const explanation = await callGemini(prompt)
-
-                            // Send the route with its explanation
                             const data = JSON.stringify({ ...route, explanation })
                             controller.enqueue(encoder.encode(`data: ${data}\n\n`))
                         } catch (err) {
                             console.error("Error generating explanation:", err)
-                            const data = JSON.stringify({
-                                ...route,
-                                explanation: "Error generating explanation.",
-                            })
+                            const data = JSON.stringify({ ...route, explanation: "Error generating explanation." })
                             controller.enqueue(encoder.encode(`data: ${data}\n\n`))
                         }
                     }
 
-                    // Clean up the temporary directory
                     try {
-                        await fs.rm(path, { recursive: true, force: true })
+                        await fs.rm(repoPath, { recursive: true, force: true })
                     } catch (err) {
                         console.error("Error cleaning up temporary directory:", err)
                     }
 
-                    // End the stream
                     controller.enqueue(encoder.encode(`data: done\n\n`))
                     controller.close()
                 } catch (err) {
@@ -216,7 +212,7 @@ ${route.handler}`
         console.error("Error in API route:", err)
         return NextResponse.json(
             { error: err instanceof Error ? err.message : "An unknown error occurred" },
-            { status: 500 },
+            { status: 500 }
         )
     }
 }
