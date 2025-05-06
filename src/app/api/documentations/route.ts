@@ -36,3 +36,23 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ success: true, data }, { status: 201 });
 }
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("Documentations")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .order("updated_at", { ascending: false });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, data });
+}

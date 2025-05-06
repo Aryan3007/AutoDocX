@@ -159,21 +159,28 @@ export async function POST(request: NextRequest) {
                     for (const route of routes) {
                         const prompt = `You are an API documentation generator.
 
-Generate concise, developer-friendly documentation for the following API route:
-Method: ${route.method}
-Path: ${route.routePath}
-
-Here is the route handler implementation:
-${route.handler}
-
-Your task is to:
-1. Provide a **brief description** (20–30 words max) of what this endpoint does.
-2. Include a **request JSON sample** (relevant body parameters only).
-3. Include a **response JSON sample** (typical success response).
-4. Mention common **status codes** with short explanations.
-
-Format the entire output using **clean and semantic HTML** with **inline CSS styles** for readability and structure.
-Use <h3>, <pre>, <code>, <ul>, <li>, and <p> with inline styles only.`
+                        Generate concise, developer-friendly documentation for the following API route:
+                        Method: ${route.method}
+                        Path: ${route.routePath}
+                        
+                        Here is the route handler implementation:
+                        ${route.handler}
+                        
+                        Your task is to:
+                        1. Provide a **brief description** (20–30 words max) of what this endpoint does.
+                        2. Include a **request JSON sample** (relevant body parameters only), formatted with syntax highlighting.
+                        3. Include a **response JSON sample** (typical success response), formatted with syntax highlighting.
+                        4. Mention common **status codes** with short explanations.
+                        
+                        Format the entire output using **clean and semantic HTML** with **inline CSS styles** for readability and structure. Use the following guidelines:
+                        - Use <h3> for section headings (e.g., "Description", "Request Body", "Response Success", "Status Codes") with style="font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: #1a202c;".
+                        - Use <p> for the description with style="margin-bottom: 1rem; color: #4a5568;".
+                        - For JSON samples in "Request Body" and "Response Success":
+                          - Wrap each JSON in a <pre> with style="background-color: #f7fafc; padding: 1rem; border-radius: 0.375rem; overflow-x: auto; margin-bottom: 1rem; border: 1px solid #e2e8f0; font-family: monospace; font-size: 0.875rem; position: relative;".
+                          - Inside <pre>, use a <code> tag to hold the JSON content.
+                          - Apply syntax highlighting within the <code> tag by wrapping JSON keys in <span> with style="color: #2b6cb0;" (blue), strings in <span> with style="color: #e53e3e;" (red), numbers in <span> with style="color: #d69e2e;" (yellow), and booleans/null in <span> with style="color: #2f855a;" (green). Preserve JSON structure (indentation, brackets, etc.).
+                        - Use <ul> for status codes with style="list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem;".
+                        - Use <li> for each status code with style="color: #4a5568; margin-bottom: 0.25rem;".`;
 
                         try {
                             const explanation = await callGemini(prompt)

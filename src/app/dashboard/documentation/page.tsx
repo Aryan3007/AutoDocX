@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -42,48 +42,19 @@ const allDocs = [
     models: 5,
     status: "Complete",
   },
-  {
-    id: 2,
-    projectName: "payment-gateway",
-    description: "Payment processing service",
-    language: "Python",
-    generated: "1 week ago",
-    endpoints: 8,
-    models: 3,
-    status: "Complete",
-  },
-  {
-    id: 3,
-    projectName: "auth-service",
-    description: "Authentication and authorization service",
-    language: "Java",
-    generated: "3 days ago",
-    endpoints: 15,
-    models: 7,
-    status: "Complete",
-  },
-  {
-    id: 4,
-    projectName: "notification-service",
-    description: "Email and push notification service",
-    language: "Go",
-    generated: "5 days ago",
-    endpoints: 6,
-    models: 2,
-    status: "In Progress",
-  },
-  {
-    id: 5,
-    projectName: "analytics-api",
-    description: "Analytics data collection and reporting API",
-    language: "Ruby",
-    generated: "2 weeks ago",
-    endpoints: 10,
-    models: 4,
-    status: "Complete",
-  },
+  // more here
 ]
 
+type Documentation = {
+  id: string
+  projectName: string
+  description: string
+  language: string
+  generated: string
+  endpoints: number
+  models: number
+  status: string
+}
 type SortField = "projectName" | "language" | "generated" | "endpoints" | "models" | "status"
 type SortDirection = "asc" | "desc"
 
@@ -95,6 +66,9 @@ export default function DocumentationPage() {
   const [sortDirection] = useState<SortDirection>("asc")
   const [languageFilter, setLanguageFilter] = useState<string[]>([])
   const [statusFilter, setStatusFilter] = useState<string[]>([])
+  const [docs, setDocs] = useState<Documentation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Get unique languages and statuses for filters
   const languages = Array.from(new Set(allDocs.map((doc) => doc.language)))
@@ -174,6 +148,30 @@ export default function DocumentationPage() {
         return "default"
     }
   }
+
+
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const res = await fetch("/api/documentations")
+        const json = await res.json()
+
+        if (json.success) {
+          setDocs(json.data)
+        } else {
+          throw new Error(json.error || "Failed to load data")
+        }
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDocs()
+  }, [])
+
+
 
   return (
     <div className="container mx-auto py-6 px-4 md:px-6 max-w-6xl">
@@ -354,27 +352,35 @@ export default function DocumentationPage() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paginatedDocs.length > 0 ? (
-          paginatedDocs.map((doc) => (
+        {loading ? (
+          <div className="col-span-full text-center text-muted-foreground">
+        Loading...
+          </div>
+        ) : error ? (
+          <div className="col-span-full text-center text-red-500">
+        {error}
+          </div>
+        ) : docs.length > 0 ? (
+          docs.map((doc) => (
         <div key={doc.id} className="rounded-md p-4 bg-white border shadow-sm">
           <div className="mb-2">
-            <h3 className="text-lg font-bold capitalize">{doc.projectName}</h3>
-            <p className="text-sm text-muted-foreground">{doc.description}</p>
+            <h3 className="text-lg font-bold capitalize">{doc.repo_name}</h3>
+            <p className="text-sm text-muted-foreground">{doc.metadata.repo_description || 'No description available'}</p>
           </div>
           <div className="mb-2">
-            <Badge variant="outline">{doc.language}</Badge>
+            <Badge variant="outline">{doc.metadata.language}</Badge>
           </div>
           <div className="text-sm text-muted-foreground mb-2">
-            <p>Generated: {doc.generated}</p>
-            <p>Endpoints: {doc.endpoints}</p>
-            <p>Models: {doc.models}</p>
+            <p>Generated: {new Date(doc.metadata.generated_at).toLocaleDateString()}</p>
+            <p>Endpoints: {doc.metadata.endpoints_count}</p>
+            <p>Categories: {doc.metadata.categories.length}</p>
           </div>
           <div className="mb-2">
             <Badge variant={getStatusBadgeVariant(doc.status)}>{doc.status}</Badge>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" asChild>
-          <Link href={`/dashboard/api-endpoints/register`}>
+          <Link href={`/dashboard/documentation/${doc.id}`}>
             <FileText className="h-4 w-4" />
             <span className="sr-only md:not-sr-only md:ml-2">View</span>
           </Link>
