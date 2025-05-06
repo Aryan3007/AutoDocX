@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState, useMemo, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -307,96 +306,124 @@ export default function ApiDocumentation() {
     return formatted
   }
 
-  // Generate and download documentation as a DOC file
-  const downloadDocumentation = () => {
-    // Create a blob with HTML content
-    const generateDocContent = () => {
-      let content = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>API Documentation - ${selectedRepo?.name}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            h1 { color: #333; }
-            h2 { color: #444; margin-top: 30px; }
-            .method { 
-              display: inline-block; 
-              padding: 3px 8px; 
-              border-radius: 4px; 
-              font-weight: bold; 
-              font-size: 12px; 
-              margin-right: 10px;
+// Generate and download documentation as a DOC file
+const downloadDocumentation = () => {
+    try {
+      // Create a well-formatted HTML document
+      const generateDocContent = () => {
+        // HTML content with inline styles for better Word compatibility
+        let content = `
+          <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+          <head>
+            <meta charset="UTF-8">
+            <title>API Documentation - ${selectedRepo?.name}</title>
+            <style>
+              /* Word-compatible styles */
+              body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.5; }
+              h1 { color: #333; font-size: 24pt; margin-bottom: 10pt; }
+              h2 { color: #444; font-size: 18pt; margin-top: 20pt; margin-bottom: 10pt; }
+              .endpoint-container { margin-bottom: 20pt; page-break-inside: avoid; }
+              .method-get { background-color: #e7f5ea; color: #0a7227; padding: 2pt 5pt; font-weight: bold; }
+              .method-post { background-color: #e3f2fd; color: #0d47a1; padding: 2pt 5pt; font-weight: bold; }
+              .method-put { background-color: #fff8e1; color: #ff8f00; padding: 2pt 5pt; font-weight: bold; }
+              .method-delete { background-color: #ffebee; color: #c62828; padding: 2pt 5pt; font-weight: bold; }
+              .endpoint { font-family: Consolas, monospace; font-weight: bold; margin-bottom: 5pt; }
+              .handler { color: #666; margin-bottom: 10pt; }
+              .code-block { 
+                background-color: #f5f5f5; 
+                padding: 10pt; 
+                font-family: Consolas, monospace; 
+                margin: 10pt 0; 
+                white-space: pre-wrap;
+                border: 1pt solid #ddd;
+              }
+              table { border-collapse: collapse; width: 100%; }
+              td, th { border: 1px solid #ddd; padding: 8px; }
+            </style>
+            <!--[if gte mso 9]>
+            <xml>
+              <w:WordDocument>
+                <w:View>Print</w:View>
+                <w:Zoom>100</w:Zoom>
+                <w:DoNotOptimizeForBrowser/>
+              </w:WordDocument>
+            </xml>
+            <![endif]-->
+          </head>
+          <body>
+            <h1>API Documentation - ${selectedRepo?.name}</h1>
+            <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+        `;
+  
+        // Group endpoints by category
+        const categories = Object.keys(categorizedEndpoints)
+          .filter((cat) => cat !== "all")
+          .sort();
+  
+        for (const category of categories) {
+          if (categorizedEndpoints[category].length > 0) {
+            content += `<h2>${category.charAt(0).toUpperCase() + category.slice(1)} Endpoints</h2>`;
+  
+            for (const doc of categorizedEndpoints[category]) {
+              const methodClass = `method-${doc.method.toLowerCase()}`;
+              
+              content += `
+                <div class="endpoint-container">
+                  <div class="endpoint">
+                    <span class="${methodClass}">${doc.method}</span>
+                    ${doc.routePath}
+                  </div>
+                  <div class="handler">Handler: ${doc.handler}</div>
+              `;
+              
+              // Process explanation text, handling code blocks properly
+              let explanation = doc.explanation;
+              explanation = explanation.replace(/```(.*?)```/gs, (match, code) => {
+                return `<div class="code-block">${code}</div>`;
+              });
+              
+              content += `<div>${explanation}</div></div>`;
             }
-            .get { background-color: #e7f5ea; color: #0a7227; }
-            .post { background-color: #e3f2fd; color: #0d47a1; }
-            .put { background-color: #fff8e1; color: #ff8f00; }
-            .delete { background-color: #ffebee; color: #c62828; }
-            .endpoint { font-family: monospace; margin-bottom: 5px; }
-            .handler { color: #666; font-size: 12px; margin-bottom: 20px; }
-            pre { background-color: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
-            .category { color: #666; font-size: 12px; margin-left: 10px; }
-          </style>
-        </head>
-        <body>
-          <h1>API Documentation - ${selectedRepo?.name}</h1>
-          <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-      `
-
-      // Group endpoints by category
-      const categories = Object.keys(categorizedEndpoints)
-        .filter((cat) => cat !== "all")
-        .sort()
-
-      for (const category of categories) {
-        if (categorizedEndpoints[category].length > 0) {
-          content += `<h2>${category.charAt(0).toUpperCase() + category.slice(1)} Endpoints</h2>`
-
-          for (const doc of categorizedEndpoints[category]) {
-            const methodClass = doc.method.toLowerCase()
-            content += `
-              <div class="endpoint-container">
-                <div class="endpoint">
-                  <span class="method ${methodClass}">${doc.method}</span>
-                  <span>${doc.routePath}</span>
-                </div>
-                <div class="handler">Handler: ${doc.handler}</div>
-                <div>${doc.explanation.replace(/```/g, "<pre>").replace(/```/g, "</pre>")}</div>
-              </div>
-            `
           }
         }
-      }
-
-      content += `
-        </body>
-        </html>
-      `
-
-      return content
+  
+        content += `
+          </body>
+          </html>
+        `;
+  
+        return content;
+      };
+  
+      const htmlContent = generateDocContent();
+      
+      // Create a Blob with the HTML content and the correct MIME type for Word
+      const blob = new Blob([htmlContent], { 
+        type: 'application/msword;charset=utf-8' 
+      });
+      
+      // Use browser's built-in download capability
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${selectedRepo?.name}-api-documentation.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success("Documentation downloaded", {
+        description: "The API documentation has been downloaded as a DOC file.",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error generating documentation:", error);
+      toast.error("Failed to download documentation", {
+        description: "There was an error generating the documentation file.",
+        duration: 3000,
+      });
     }
-
-    const htmlContent = generateDocContent()
-    const blob = new Blob([htmlContent], { type: "application/msword" })
-    const url = URL.createObjectURL(blob)
-
-    // Create a download link and trigger it
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `${selectedRepo?.name}-api-documentation.doc`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-    // Clean up
-    URL.revokeObjectURL(url)
-
-    toast.success("Documentation downloaded", {
-      description: "The API documentation has been downloaded as a DOC file.",
-      duration: 3000,
-    })
-  }
+  };
 
   useEffect(() => {
     // Get repository data from localStorage
@@ -788,9 +815,7 @@ export default function ApiDocumentation() {
                             </TabsContent>
                           </Tabs>
 
-                          <div className="mt-4 text-xs text-gray-500">
-                            <span className="font-medium">Handler:</span> {doc.handler}
-                          </div>
+                         
                         </div>
                       )}
                     </div>
