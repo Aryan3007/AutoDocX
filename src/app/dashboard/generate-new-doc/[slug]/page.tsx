@@ -17,11 +17,13 @@ import {
   CreditCard,
   X,
   ExternalLink,
-  Info,
   User,
   Users,
   Download,
   List,
+  Upload,
+  Star,
+  GitFork,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,6 +32,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
+import { useSession } from "next-auth/react"
 
 interface Repository {
   name: string
@@ -266,14 +269,6 @@ export default function ApiDocumentation() {
     return curl
   }
 
-  // Extract code blocks from markdown explanation
-  const extractCodeBlocks = (explanation: string) => {
-    const codeBlockRegex = /```(?:json|javascript|js)?\n([\s\S]*?)```/g
-    const matches = [...explanation.matchAll(codeBlockRegex)]
-
-    return matches.map((match) => match[1].trim())
-  }
-
   // Format explanation to HTML (basic markdown parsing)
   const formatExplanation = (explanation: string) => {
     // Replace code blocks with placeholders to avoid processing their content
@@ -425,6 +420,8 @@ const downloadDocumentation = () => {
     }
   };
 
+  
+
   useEffect(() => {
     // Get repository data from localStorage
     const repoData = localStorage.getItem("selectedRepo")
@@ -516,6 +513,72 @@ const downloadDocumentation = () => {
     }
   }
 
+// Add new imports
+
+// Add save functionality
+const { data: session } = useSession();
+
+const handleSave = async () => {
+  if (!session) {
+    toast.error("Authentication required", {
+      description: "You must be logged in to save documentation.",
+      duration: 3000,
+    });
+    return;
+  }
+
+  if (!selectedRepo) {
+    toast.error("No repository selected", {
+      description: "Please select a repository before saving.",
+      duration: 3000,
+    });
+    return;
+  }
+
+  try {
+    // Prepare documentation content
+    const documentationContent = {
+      repo_name: selectedRepo.name,
+      content: JSON.stringify(docs),
+      metadata: {
+        repo_url: selectedRepo.html_url,
+        repo_description: selectedRepo.description,
+        language: selectedRepo.language,
+        generated_at: new Date().toISOString(),
+        endpoints_count: docs.length,
+        categories: Object.keys(categorizedEndpoints).filter(cat => cat !== 'all')
+      },
+      status: "draft"
+    };
+
+    const response = await fetch("/api/documentations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(documentationContent),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to save documentation");
+    }
+
+    await response.json();
+    
+    toast.success("Documentation saved", {
+      description: "Your API documentation has been saved successfully.",
+      duration: 3000,
+    });
+
+  } catch (error) {
+    console.error("Save error:", error);
+    toast.error("Save failed", {
+      description: "Failed to save the documentation. Please try again.",
+      duration: 3000,
+    });
+  }
+};
+
   if (!selectedRepo) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -525,29 +588,57 @@ const downloadDocumentation = () => {
   }
 
   return (
-    <div className="flex flex-col max-w-7xl mx-auto m-2 lg:m-4 rounded-2xl h-[calc(100vh-5rem)] bg-white overflow-hidden">
+    <div className="flex flex-col lg:m-4 md:rounded-2xl h-[calc(100vh-5rem)] bg-white overflow-hidden">
       {/* Top Navigation */}
       <div className="bg-white border-b border-gray-200 py-3 px-6 sticky top-0 z-10">
         <div className="flex flex-col space-y-3">
           {/* Repository info and generate button */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-bold">{selectedRepo.name}</h1>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+            {/* Left side content */}
+            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+              <Popover>
+              <PopoverTrigger asChild>
+                <button className="h-8 text-lg text-left cursor-pointer font-medium truncate">
+                {selectedRepo.name}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-2">
+                <h3 className="font-medium">Repository Details</h3>
+                <div className="text-sm space-y-1">
+                  <p>
+                  <span className="font-medium">Full Name:</span> {selectedRepo.full_name}
+                  </p>
+                  <p>
+                  <span className="font-medium">Description:</span>{" "}
+                  {selectedRepo.description || "No description available"}
+                  </p>
+                  <p>
+                  <span className="font-medium">Visibility:</span> {selectedRepo.visibility}
+                  </p>
+                  <p>
+                  <span className="font-medium">Clone URL:</span> {selectedRepo.clone_url}
+                  </p>
+                  <p>
+                  <span className="font-medium">Open Issues:</span> {selectedRepo.open_issues_count}
+                  </p>
+                </div>
+                </div>
+              </PopoverContent>
+              </Popover>
+              
+              <div className="flex items-center flex-wrap gap-2">
               <Badge variant="outline" className="text-xs">
                 {selectedRepo.language}
               </Badge>
               <div className="flex items-center space-x-2 text-sm text-gray-500">
                 <span className="flex items-center">
-                  <svg className="h-4 w-4 mr-1" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z" />
-                  </svg>
-                  {selectedRepo.stargazers_count}
+               <Star className="h-4 w-4 mr-1" />
+                {selectedRepo.stargazers_count}
                 </span>
                 <span className="flex items-center">
-                  <svg className="h-4 w-4 mr-1" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
-                  </svg>
-                  {selectedRepo.forks_count}
+               <GitFork className="h-4 w-4 mr-1" />
+                {selectedRepo.forks_count}
                 </span>
               </div>
               <a
@@ -558,67 +649,46 @@ const downloadDocumentation = () => {
               >
                 View on GitHub <ExternalLink className="h-3 w-3 ml-1" />
               </a>
+              </div>
             </div>
+
+            {/* Right side buttons */}
             <div className="flex items-center space-x-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
-                    <Info className="h-4 w-4 mr-2" />
-                    Repository Info
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                  <div className="space-y-2">
-                    <h3 className="font-medium">Repository Details</h3>
-                    <div className="text-sm space-y-1">
-                      <p>
-                        <span className="font-medium">Full Name:</span> {selectedRepo.full_name}
-                      </p>
-                      <p>
-                        <span className="font-medium">Description:</span>{" "}
-                        {selectedRepo.description || "No description available"}
-                      </p>
-                      <p>
-                        <span className="font-medium">Visibility:</span> {selectedRepo.visibility}
-                      </p>
-                      <p>
-                        <span className="font-medium">Clone URL:</span> {selectedRepo.clone_url}
-                      </p>
-                      <p>
-                        <span className="font-medium">Open Issues:</span> {selectedRepo.open_issues_count}
-                      </p>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              <Button onClick={handleSubmit} disabled={isGenerating}>
+              {docs.length === 0 ? (
+              <Button className="flex-1 md:flex-none" onClick={handleSubmit} disabled={isGenerating}>
                 {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
                 ) : (
-                  <>
-                    <Github className="mr-2 h-4 w-4" />
-                    Generate Docs
-                  </>
+                <>
+                  <Github className="mr-2 h-4 w-4" />
+                  Generate Docs
+                </>
                 )}
               </Button>
-              <Button variant="outline" onClick={downloadDocumentation} disabled={docs.length === 0} className="ml-2">
+              ) : (
+              <Button variant="outline" className="flex-1 md:flex-none" onClick={downloadDocumentation}>
                 <Download className="mr-2 h-4 w-4" />
                 Download Docs
               </Button>
+              )}
+              <Button className="flex-1 md:flex-none" onClick={handleSave} disabled={!session}>
+              <Upload className="h-4 w-4 mr-2" />
+              Save
+              </Button>
               <Button 
-                variant="ghost" 
-                size="icon" 
-                className="ml-2" 
-                onClick={() => setShowToc(!showToc)}
-                title={showToc ? "Hide table of contents" : "Show table of contents"}
+              variant="outline" 
+              size="icon" 
+              className="ml-2" 
+              onClick={() => setShowToc(!showToc)}
+              title={showToc ? "Hide table of contents" : "Show table of contents"}
               >
-                <List className="h-5 w-5" />
+              <List className="h-5 w-5" />
               </Button>
             </div>
-          </div>
+            </div>
 
           {/* Search and categories */}
           <div className="flex items-center justify-between">
@@ -693,7 +763,6 @@ const downloadDocumentation = () => {
                 filteredEndpoints.map((doc, index) => {
                   const endpointId = `${doc.method}-${doc.routePath}`
                   const isExpanded = expandedEndpoints.has(endpointId)
-                  const codeBlocks = extractCodeBlocks(doc.explanation)
                   const curl = generateCurl(doc)
 
                   return (
@@ -735,8 +804,7 @@ const downloadDocumentation = () => {
                           <Tabs defaultValue="docs">
                             <TabsList className="mb-4">
                               <TabsTrigger value="docs">Documentation</TabsTrigger>
-                              <TabsTrigger value="examples">Examples</TabsTrigger>
-                              <TabsTrigger value="curl">cURL</TabsTrigger>
+                              <TabsTrigger className="w-44" value="curl">cURL</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="docs">
@@ -746,38 +814,7 @@ const downloadDocumentation = () => {
                               />
                             </TabsContent>
 
-                            <TabsContent value="examples">
-                              {codeBlocks.length > 0 ? (
-                                <div className="space-y-4">
-                                  {codeBlocks.map((code, i) => (
-                                    <div key={i} className="relative">
-                                      <div className="absolute right-2 top-2 z-10">
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6 rounded-full bg-white/80 hover:bg-white"
-                                                onClick={() => copyToClipboard(code, "Example code")}
-                                              >
-                                                <Copy className="h-3 w-3" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Copy code</TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      </div>
-                                      <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
-                                        <code>{code}</code>
-                                      </pre>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="text-center py-4 text-gray-500">No code examples available</div>
-                              )}
-                            </TabsContent>
+                          
 
                             <TabsContent value="curl">
                               <div className="relative">
@@ -788,7 +825,7 @@ const downloadDocumentation = () => {
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="h-6 w-6 rounded-full bg-white/80 hover:bg-white"
+                                          className="h-8 bg-white/80 hover:bg-white"
                                           onClick={() => copyToClipboard(curl, "cURL command")}
                                         >
                                           <Copy className="h-3 w-3" />
@@ -835,57 +872,65 @@ const downloadDocumentation = () => {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="space-y-1">
-              {Object.keys(categorizedEndpoints)
+                <p 
+                className={`cursor-pointer flex items-center py-1 my-2 px-2 rounded-md text-sm ${
+                  activeCategory === "all" ? "bg-blue-100 text-blue-800" : "hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveCategory("all")}
+                >
+                All Api Endpoints
+                </p>
+              <div className="space-y-0">
+                {Object.keys(categorizedEndpoints)
                 .filter((category) => category !== "all" && categorizedEndpoints[category].length > 0)
                 .sort()
                 .map((category) => {
                   return (
-                    <div key={category} className="mb-3">
-                      <div
-                        className={`flex items-center py-1 px-2 rounded-md text-sm text-gray-600 font-medium cursor-pointer ${
-                          activeCategory === category ? "bg-blue-100 text-blue-800" : "hover:bg-gray-100"
-                        }`}
-                        onClick={() => scrollToCategory(category)}
-                        ref={(el) => {
-                          categoryRefs.current[category] = el
-                        }}
-                      >
-                        {getCategoryIcon(category)}
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                        <Badge variant="outline" className="ml-2 text-xs">
-                          {categorizedEndpoints[category].length}
-                        </Badge>
-                      </div>
-                      {activeCategory === category && (
-                        <div className="ml-6 mt-1 space-y-1">
-                          {categorizedEndpoints[category].map((doc, index) => {
-                            const endpointId = `${doc.method}-${doc.routePath}`
-                            return (
-                              <div
-                                key={index}
-                                className={`flex items-center py-1 px-2 rounded-md text-xs cursor-pointer ${
-                                  activeEndpoint === endpointId ? "bg-blue-50 text-blue-700" : "hover:bg-gray-100"
-                                }`}
-                                onClick={() => {
-                                  setExpandedEndpoints((prev) => new Set([...prev, endpointId]))
-                                  setActiveEndpoint(endpointId)
-                                  scrollToEndpoint(endpointId)
-                                }}
-                              >
-                                <div className={`px-1 mr-2 rounded text-xs ${getMethodColor(doc.method)}`}>
-                                  {doc.method}
-                                </div>
-                                <div className="truncate">{doc.routePath}</div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
+                  <div key={category} className="mb-3">
+                    <div
+                    className={`flex items-center py-1 px-2 rounded-md text-sm text-gray-600 font-medium cursor-pointer ${
+                      activeCategory === category ? "bg-blue-100 text-blue-800" : "hover:bg-gray-100"
+                    }`}
+                    onClick={() => scrollToCategory(category)}
+                    ref={(el) => {
+                      categoryRefs.current[category] = el
+                    }}
+                    >
+                    {getCategoryIcon(category)}
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                    <Badge variant="outline" className="ml-2 text-xs">
+                      {categorizedEndpoints[category].length}
+                    </Badge>
                     </div>
+                    {activeCategory === category && (
+                    <div className="ml-6 mt-1 space-y-1">
+                      {categorizedEndpoints[category].map((doc, index) => {
+                      const endpointId = `${doc.method}-${doc.routePath}`
+                      return (
+                        <div
+                        key={index}
+                        className={`flex items-center py-1 px-2 rounded-md text-xs cursor-pointer ${
+                          activeEndpoint === endpointId ? "bg-blue-50 text-blue-700" : "hover:bg-gray-100"
+                        }`}
+                        onClick={() => {
+                          setExpandedEndpoints((prev) => new Set([...prev, endpointId]))
+                          setActiveEndpoint(endpointId)
+                          scrollToEndpoint(endpointId)
+                        }}
+                        >
+                        <div className={`px-1 mr-2 rounded text-xs ${getMethodColor(doc.method)}`}>
+                          {doc.method}
+                        </div>
+                        <div className="truncate">{doc.routePath}</div>
+                        </div>
+                      )
+                      })}
+                    </div>
+                    )}
+                  </div>
                   )
                 })}
-            </div>
+              </div>
           </div>
         )}
       </div>
