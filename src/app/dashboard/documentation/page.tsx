@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Download, FileText, Search, SlidersHorizontal } from "lucide-react"
+import {  FileText, Search, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -47,13 +47,20 @@ const allDocs = [
 
 type Documentation = {
   id: string
-  projectName: string
-  description: string
-  language: string
-  generated: string
-  endpoints: number
-  models: number
-  status: string
+    repo_name: string
+    description: string
+    generated: string
+    endpoints: number
+    created_at: number
+    status: string
+    metadata: {
+      repo_description: string
+      repo_language: string
+      language: string
+      generated_at: string
+      endpoints_count: number
+      categories: string[]
+    }
 }
 type SortField = "projectName" | "language" | "generated" | "endpoints" | "models" | "status"
 type SortDirection = "asc" | "desc"
@@ -161,8 +168,8 @@ export default function DocumentationPage() {
         } else {
           throw new Error(json.error || "Failed to load data")
         }
-      } catch (err: any) {
-        setError(err.message)
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "An unknown error occurred")
       } finally {
         setLoading(false)
       }
@@ -382,13 +389,10 @@ export default function DocumentationPage() {
             <Button variant="outline" size="sm" asChild>
           <Link href={`/dashboard/documentation/${doc.id}`}>
             <FileText className="h-4 w-4" />
-            <span className="sr-only md:not-sr-only md:ml-2">View</span>
+            <span className="sr-only md:not-sr-only md:ml-2">View Documentation</span>
           </Link>
             </Button>
-            <Button variant="outline" size="sm">
-          <Download className="h-4 w-4" />
-          <span className="sr-only md:not-sr-only md:ml-2">Download</span>
-            </Button>
+           
           </div>
         </div>
           ))

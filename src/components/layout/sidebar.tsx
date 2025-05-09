@@ -1,27 +1,59 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { X, Home, FileText, Github } from "lucide-react"
+import { X, Home, FileText } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { LogoutButton } from "../LogoutButton"
-
+import { useEffect, useState } from "react"
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+dayjs.extend(relativeTime);
 type SidebarProps = {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   isMobile: boolean
 }
+type Documentation = {
+  id: string
+  repo_name: string
+  description: string
+  language: string
+  generated: string
+  endpoints: number
+  created_at: number
+  status: string
+}
 
 export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
   const pathname = usePathname()
+  const [docs, setDocs] = useState<Documentation[]>([])
 
-  // Recent repositories (mock data)
-  const recentRepos = [
-    { name: "api-service", description: "REST API service for user management", updated: "2 days ago" },
-    { name: "payment-gateway", description: "Payment processing service", updated: "1 week ago" },
-    { name: "auth-service", description: "Authentication and authorization service", updated: "3 days ago" },
-  ]
+
+
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const res = await fetch("/api/documentations")
+        const json = await res.json()
+
+        if (json.success) {
+          setDocs(json.data)
+        } else {
+          throw new Error(json.error || "Failed to load data")
+        }
+      }catch (err: unknown) {
+        if (err instanceof Error) {
+          console.log(err.message)
+        } else {
+          console.log(err)
+        }
+      }
+    }
+
+    fetchDocs()
+  }, [])
 
   return (
     <AnimatePresence>
@@ -47,11 +79,9 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
             )}
           >
             <div className="flex flex-col h-full">
-              <div className="p-4">
-                <div className="flex items-center justify-between ">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-xl gradient-text">AutoDocX</span>
-                  </div>
+              <div className="">
+                <div className="flex items-center justify-end ">
+
                   {isMobile && (
                     <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
                       <X className="h-5 w-5" />
@@ -59,7 +89,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
                     </Button>
                   )}
                 </div>
-                
+
               </div>
 
               <div className="flex-1 overflow-auto">
@@ -96,18 +126,19 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
                   <h3 className="px-4 mb-1 text-sm font-medium text-muted-foreground">Recent Repositories</h3>
                   <div className="mt-2">
                     <nav className="space-y-1 px-3">
-                      {recentRepos.map((repo) => (
+                      {docs.map((repo) => (
                         <Link
-                          key={repo.name}
-                          href={`/dashboard/documentation`}
-                          className="flex flex-col gap-1 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent/50 hover:text-accent-foreground"
+                          key={repo.repo_name}
+                          href={`/dashboard/documentation/${repo.id}`}
+                          className="flex flex-col gap-0 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent/50 hover:text-accent-foreground"
                         >
                           <div className="flex items-center gap-2">
-                            <Github className="h-4 w-4" />
-                            <span className="font-medium">{repo.name}</span>
+                            <span className="font-medium">{repo.repo_name}</span>
                           </div>
-                          <p className="text-xs text-muted-foreground pl-6">{repo.description}</p>
-                          <p className="text-xs text-muted-foreground pl-6">Updated {repo.updated}</p>
+                         
+                          <p className="text-xs text-nowrap text-muted-foreground">
+                            Updated {dayjs(repo.created_at).fromNow()}
+                          </p>
                         </Link>
                       ))}
                     </nav>
@@ -116,7 +147,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
               </div>
 
               <div className="p-4 mt-auto">
-                <LogoutButton/>
+                <LogoutButton />
                 <p className="text-xs text-muted-foreground mt-1">More access to advanced features</p>
               </div>
             </div>

@@ -32,7 +32,7 @@ console.log(session);
           <span className="sr-only">Toggle sidebar</span>
         </Button>
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-lg">AutoDocX</span>
+          <span className="font-semibold text-lg"><span className="text-red-600">/</span>AutoDocX</span>
           <span className="text-muted-foreground hidden md:inline">|</span>
           <span className="text-muted-foreground hidden md:inline">{getCurrentSection()}</span>
         </div>
