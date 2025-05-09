@@ -14,7 +14,9 @@ declare module "next-auth" {
   }
 }
 
+console.log(process.env.NEXT_PUBLIC_SUPABASE_URL)
 const handler = NextAuth({
+  
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
