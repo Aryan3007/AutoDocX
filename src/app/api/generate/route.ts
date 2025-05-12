@@ -4,6 +4,7 @@ import fs from "fs/promises"
 import path from "path"
 import * as parser from "@babel/parser"
 import traverse from "@babel/traverse"
+import os from "os" // Add this line
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
@@ -32,16 +33,18 @@ const FRAMEWORK_MARKERS: { [key: string]: { language: string; markers: string[] 
 }
 
 async function cloneRepo(repoUrl: string): Promise<string> {
-    const tmpDir = path.join("/tmp", Date.now().toString())
-    await fs.mkdir(tmpDir, { recursive: true })
-    const git = simpleGit()
-    await git.clone(repoUrl, tmpDir)
-    return tmpDir
-}
+    const tmpBase = os.tmpdir(); // always resolves to /tmp on Vercel
+    const tmpDir = path.join(tmpBase, Date.now().toString());
+    await fs.mkdir(tmpDir, { recursive: true });
 
+    const git = simpleGit();
+    await git.clone(repoUrl, tmpDir);
+
+    return tmpDir;
+}
 async function detectLanguageAndFramework(dir: string): Promise<{ language: string; framework: string }> {
     const files = await fs.readdir(dir)
-    
+
     for (const framework in FRAMEWORK_MARKERS) {
         const { language, markers } = FRAMEWORK_MARKERS[framework]
         for (const marker of markers) {
@@ -329,7 +332,7 @@ const parsers: {
                     const lines = code.split("\n")
                     for (let i = 0; i < lines.length; i++) {
                         const line = lines[i].trim()
-                        if (line.match(/^(get|post|put|patch|delete)\s+['"]([^'"]+)['"]/)) {
+                        if (line.match(/^(get|post|put|patch |delete)\s+['"]([^'"]+)['"]/)) {
                             const match = line.match(/^(get|post|put|patch|delete)\s+['"]([^'"]+)['"](?:,\s*to:\s*['"]([^'"]+)['"])?/)
                             if (match) {
                                 const method = match[1].toUpperCase()
