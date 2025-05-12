@@ -32,7 +32,6 @@ const FRAMEWORK_MARKERS: { [key: string]: { language: string; markers: string[] 
 }
 
 async function cloneRepo(repoUrl: string): Promise<string> {
-    // Use /tmp for Vercel compatibility
     const tmpDir = path.join("/tmp", Date.now().toString())
     await fs.mkdir(tmpDir, { recursive: true })
     const git = simpleGit()
@@ -330,7 +329,7 @@ const parsers: {
                     const lines = code.split("\n")
                     for (let i = 0; i < lines.length; i++) {
                         const line = lines[i].trim()
-                        if (line.match(/^(get|post|put|patch |delete)\s+['"]([^'"]+)['"]/)) {
+                        if (line.match(/^(get|post|put|patch|delete)\s+['"]([^'"]+)['"]/)) {
                             const match = line.match(/^(get|post|put|patch|delete)\s+['"]([^'"]+)['"](?:,\s*to:\s*['"]([^'"]+)['"])?/)
                             if (match) {
                                 const method = match[1].toUpperCase()
