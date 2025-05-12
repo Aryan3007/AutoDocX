@@ -32,7 +32,8 @@ const FRAMEWORK_MARKERS: { [key: string]: { language: string; markers: string[] 
 }
 
 async function cloneRepo(repoUrl: string): Promise<string> {
-    const tmpDir = path.join(process.cwd(), "tmp", Date.now().toString())
+    // Use /tmp for Vercel compatibility
+    const tmpDir = path.join("/tmp", Date.now().toString())
     await fs.mkdir(tmpDir, { recursive: true })
     const git = simpleGit()
     await git.clone(repoUrl, tmpDir)
