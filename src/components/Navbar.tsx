@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
 const Navbar = () => {
-    const { data: session } = useSession(); // Use useSession to get session data
+    const { data: session } = useSession(); 
 
     return (
         <div className="container px-4 max-w-7xl  mx-auto sm:px-6 lg:px-8">
