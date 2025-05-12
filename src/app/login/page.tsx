@@ -14,7 +14,7 @@ export default function LoginPage() {
   
     useEffect(() => {
       if (status === "authenticated") {
-        router.push("/dashboard"); // Redirect if already logged in
+        router.push("/dashboard/documentation");
       }
     }, [status, router]);
   

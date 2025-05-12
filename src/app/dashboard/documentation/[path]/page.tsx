@@ -615,8 +615,11 @@ export default function ApiDocumentation() {
   }
 
   return (
-    <div className="flex flex-col lg:m-4 md:rounded-2xl h-[calc(100vh-5rem)] bg-white overflow-hidden">
-      <div className="bg-white border-b border-gray-200 py-3 px-2 lg:px-6 sticky top-0 z-10">
+    <div className=" max-w-7xl mx-auto">
+
+   
+    <div className="flex flex-col  lg:m-4 md:rounded-2xl h-[calc(100vh-5rem)] bg-white overflow-hidden">
+      <div className="bg-white  border-b border-gray-200 py-3 px-2 lg:px-6 sticky top-0 z-10">
         <div className="flex flex-col space-y-3">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
             <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
@@ -970,6 +973,6 @@ export default function ApiDocumentation() {
           </div>
         </div>
       </div>
-    </div>
+    </div> </div>
   )
 }

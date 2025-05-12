@@ -118,7 +118,7 @@ export default function ImportRepoDialog() {
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          className="w-fit justify-start gap-2 bg-black hover:bg-gray-900 hover:text-white text-white transition-colors"
+          className="w-full justify-start gap-2 bg-black hover:bg-gray-900 hover:text-white text-white transition-colors"
         >
           <Github className="h-4 w-4" />
           <span>Import Repository</span>

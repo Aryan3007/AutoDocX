@@ -24,7 +24,6 @@ import {
   Upload,
   Star,
   GitFork,
-  GitGraph,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,8 +33,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
-import ReactFlow, { Background, Controls, MiniMap, Node, Edge } from "reactflow"
-import "reactflow/dist/style.css"
 
 interface Repository {
   name: string
@@ -57,23 +54,13 @@ interface RouteDoc {
   explanation?: string
 }
 
-interface Diagram {
-  label: string
-  data: {
-    nodes: Node[]
-    edges: Edge[]
-  }
-}
-
 type Category = string
 
 export default function ApiDocumentation() {
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null)
   const [repoUrl, setRepoUrl] = useState("")
   const [isGeneratingDocs, setIsGeneratingDocs] = useState(false)
-  const [isGeneratingGraphs, setIsGeneratingGraphs] = useState(false)
   const [docs, setDocs] = useState<RouteDoc[]>([])
-  const [diagrams, setDiagrams] = useState<Diagram[]>([])
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState<Category | "all">("all")
@@ -86,52 +73,6 @@ export default function ApiDocumentation() {
   const endpointRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const { data: session } = useSession()
-
-  // Hardcode the diagram for testing
-  useEffect(() => {
-    setDiagrams([
-      {
-        label: "flowchart",
-        data: {
-          nodes: [
-            { id: "A", data: { label: "User Router" }, position: { x: 0, y: 0 }, parentId: "group-Express Router", extent: "parent" },
-            { id: "B", data: { label: "User Controller" }, position: { x: 200, y: 0 }, parentId: "group-Express Router", extent: "parent" },
-            { id: "C", data: { label: "Service Router" }, position: { x: 0, y: 100 }, parentId: "group-Express Router", extent: "parent" },
-            { id: "D", data: { label: "Service Controller" }, position: { x: 200, y: 100 }, parentId: "group-Express Router", extent: "parent" },
-            { id: "E", data: { label: "Appointment Router" }, position: { x: 0, y: 200 }, parentId: "group-Express Router", extent: "parent" },
-            { id: "F", data: { label: "Appointment Controller" }, position: { x: 200, y: 200 }, parentId: "group-Express Router", extent: "parent" },
-            { id: "G", data: { label: "Review Router" }, position: { x: 0, y: 300 }, parentId: "group-Express Router", extent: "parent" },
-            { id: "H", data: { label: "Review Controller" }, position: { x: 200, y: 300 }, parentId: "group-Express Router", extent: "parent" },
-            { id: "I", data: { label: "User Service" }, position: { x: 0, y: 0 }, parentId: "group-Controllers", extent: "parent" },
-            { id: "J", data: { label: "Service Service" }, position: { x: 0, y: 100 }, parentId: "group-Controllers", extent: "parent" },
-            { id: "K", data: { label: "Appointment Service" }, position: { x: 0, y: 200 }, parentId: "group-Controllers", extent: "parent" },
-            { id: "L", data: { label: "Review Service" }, position: { x: 0, y: 300 }, parentId: "group-Controllers", extent: "parent" },
-            { id: "M", data: { label: "User Model (MongoDB)" }, position: { x: 0, y: 0 }, parentId: "group-Services", extent: "parent" },
-            { id: "N", data: { label: "Service Model (MongoDB)" }, position: { x: 0, y: 100 }, parentId: "group-Services", extent: "parent" },
-            { id: "O", data: { label: "Appointment Model (MongoDB)" }, position: { x: 0, y: 200 }, parentId: "group-Services", extent: "parent" },
-            { id: "P", data: { label: "Review Model (MongoDB)" }, position: { x: 0, y: 300 }, parentId: "group-Services", extent: "parent" },
-            { id: "group-Express Router", data: { label: "Express Router" }, position: { x: 0, y: 0 }, style: { width: 300, height: 400, backgroundColor: "#f0f0f0", border: "1px solid #ccc" }, type: "group" },
-            { id: "group-Controllers", data: { label: "Controllers" }, position: { x: 350, y: 0 }, style: { width: 200, height: 400, backgroundColor: "#f0f0f0", border: "1px solid #ccc" }, type: "group" },
-            { id: "group-Services", data: { label: "Services" }, position: { x: 600, y: 0 }, style: { width: 200, height: 400, backgroundColor: "#f0f0f0", border: "1px solid #ccc" }, type: "group" }
-          ],
-          edges: [
-            { id: "e1", source: "A", target: "B", type: "default" },
-            { id: "e2", source: "C", target: "D", type: "default" },
-            { id: "e3", source: "E", target: "F", type: "default" },
-            { id: "e4", source: "G", target: "H", type: "default" },
-            { id: "e5", source: "B", target: "I", type: "default" },
-            { id: "e6", source: "D", target: "J", type: "default" },
-            { id: "e7", source: "F", target: "K", type: "default" },
-            { id: "e8", source: "H", target: "L", type: "default" },
-            { id: "e9", source: "I", target: "M", type: "default" },
-            { id: "e10", source: "J", target: "N", type: "default" },
-            { id: "e11", source: "K", target: "O", type: "default" },
-            { id: "e12", source: "L", target: "P", type: "default" }
-          ]
-        }
-      }
-    ])
-  }, [])
 
   // Categorize endpoints
   const categorizeEndpoint = (endpoint: RouteDoc): Category => {
@@ -298,8 +239,13 @@ export default function ApiDocumentation() {
     if (!explanation) {
       return "<p>No explanation provided.</p>"
     }
+    // Remove leading ```html and trailing ``` from the explanation, if present
+    const cleanedExplanation = explanation
+      .replace(/^```html\s*\n?/, "") // Remove ```html at the start with optional whitespace and newline
+      .replace(/\s*\n?```$/, "");     // Remove ``` at the end with optional whitespace and newline
+  
     const codeBlocks: string[] = []
-    const withoutCodeBlocks = explanation.replace(/```(?:json|javascript|js)?\n([\s\S]*?)```/g, (match, code) => {
+    const withoutCodeBlocks = cleanedExplanation.replace(/```(?:json|javascript|js)?\n([\s\S]*?)```/g, (match, code) => {
       codeBlocks.push(code.trim())
       return `__CODE_BLOCK_${codeBlocks.length - 1}__`
     })
@@ -449,51 +395,11 @@ export default function ApiDocumentation() {
     }
   }
 
-
-  const handleGenerateGraphs = async () => {
-    if (!repoUrl) {
-      toast.error("No repository selected", {
-        description: "Please select a repository to generate graphs.",
-        duration: 3000,
-      })
-      return
-    }
-    setIsGeneratingGraphs(true)
-    setDiagrams([])
-    setError(null)
-    try {
-      const response = await fetch("/api/visualize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repoUrl }),
-      })
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`)
-      }
-      const result = await response.json()
-      if (result.error) {
-        throw new Error(result.error)
-      }
-      setDiagrams([{ label: result.label, data: result.data }])
-      toast.success("Graph generated successfully!", {
-        description: "The architecture visualization has been generated.",
-        duration: 3000,
-      })
-    } catch (err) {
-      console.error("Error generating graphs:", err)
-      setError(err instanceof Error ? err.message : "An unknown error occurred")
-    } finally {
-      setIsGeneratingGraphs(false)
-    }
-  }
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!repoUrl) return
     setIsGeneratingDocs(true)
     setDocs([])
-    setDiagrams([])
     setError(null)
     try {
       const response = await fetch("/api/generate", {
@@ -516,11 +422,17 @@ export default function ApiDocumentation() {
         const lines = chunk.split("\n\n")
         for (const line of lines) {
           if (!line.trim() || !line.startsWith("data: ")) continue
-          const data = line.replace("data: ", "")
+          let data = line.replace("data: ", "")
           if (data === "done") {
             break
           }
           try {
+            // Log raw data for debugging
+            console.log("Raw data:", data)
+            // Remove ```html (with optional whitespace) and ``` markers
+            data = data.replace(/^```html\s*\n?/, "").replace(/\s*\n?```$/, "")
+            // Log cleaned data for debugging
+            console.log("Cleaned data:", data)
             const routeDoc = JSON.parse(data)
             setDocs((prev) => {
               const newDocs = [...prev, routeDoc]
@@ -532,7 +444,7 @@ export default function ApiDocumentation() {
               return newDocs
             })
           } catch (e) {
-            console.error("Error parsing JSON:", e)
+            console.error("Error parsing JSON:", e, "Data:", data)
           }
         }
       }
@@ -543,6 +455,7 @@ export default function ApiDocumentation() {
       setIsGeneratingDocs(false)
     }
   }
+
 
   useEffect(() => {
     const repoData = localStorage.getItem("selectedRepo")
@@ -642,13 +555,6 @@ export default function ApiDocumentation() {
               )}
             </div>
             <div>
-              <Button variant="outline" onClick={handleGenerateGraphs} disabled={isGeneratingGraphs}>
-                {isGeneratingGraphs ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating Graphs...</>
-                ) : (
-                  <><GitGraph className="h-5 w-5 mr-2" />Generate Graphs</>
-                )}
-              </Button>
               <Button
                 variant="outline"
                 size="icon"
@@ -665,10 +571,7 @@ export default function ApiDocumentation() {
 
       {/* Tabbed Content */}
       <Tabs defaultValue="documentation" className="flex-1 overflow-hidden">
-        <TabsList className="bg-white mt-2 px-6">
-          <TabsTrigger value="documentation">Documentation</TabsTrigger>
-          <TabsTrigger value="graphs">Graphs</TabsTrigger>
-        </TabsList>
+        
         <TabsContent value="documentation" className="h-full overflow-hidden">
           <div className="flex flex-1 h-full overflow-hidden">
             <div className={`flex-1 overflow-auto p-6 ${showToc ? "" : ""}`} ref={contentRef}>
@@ -866,63 +769,6 @@ export default function ApiDocumentation() {
             )}
           </div>
         </TabsContent>
-        <TabsContent value="graphs" className="h-full overflow-auto p-6 pt-1">
-          {error ? (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-              <h3 className="text-red-800 font-medium">Error</h3>
-              <p className="text-red-700">{error}</p>
-            </div>
-          ) : isGeneratingGraphs ? (
-            <div className="text-center py-12">
-              <Loader2 className="h-12 w-12 mx-auto text-primary animate-spin mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Generating Graphs</h3>
-              <p className="text-gray-500">Analyzing repository and generating visualizations...</p>
-            </div>
-          ) : diagrams.length === 0 ? (
-            <div className="text-center py-12">
-              <GitGraph className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No graphs generated yet</h3>
-              <p className="text-gray-500 mb-4">
-                Click the &quot;Generate Graphs&quot; button to analyze your repository and generate architecture visualizations.
-              </p>
-              <Button onClick={handleGenerateGraphs} disabled={isGeneratingGraphs}>
-                {isGeneratingGraphs ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating Graphs...</>
-                ) : (
-                  <><GitGraph className="mr-2 h-4 w-4" />Generate Graphs</>
-                )}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {diagrams.map((diagram, index) => (
-                <div key={index} className="border rounded-md p-6 bg-white shadow-sm">
-                  <h2 className="text-xl font-semibold mb-2 capitalize">{diagram.label}</h2>
-                  <p className="text-gray-600 mb-4">
-                    {diagram.label === "flowchart"
-                      ? "High-level flow of the backend system, including routers, middleware, services, and database access."
-                      : "Data models, schemas, and class relationships in the backend system."}
-                  </p>
-                  <div className="bg-gray-50 p-4 rounded-md" style={{ height: "600px", overflow: "auto" }}>
-                    <ReactFlow
-                      nodes={diagram.data.nodes}
-                      edges={diagram.data.edges}
-                      fitView
-                      nodesDraggable={false}
-                      nodesConnectable={false}
-                      elementsSelectable={false}
-                      style={{ background: "#f9fafb" }}
-                    >
-                      <Background />
-                      <Controls />
-                      <MiniMap />
-                    </ReactFlow>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
       </Tabs>
 
       {/* Footer */}
@@ -931,17 +777,14 @@ export default function ApiDocumentation() {
           <div className="flex items-center space-x-1">
             <span className="font-medium">{docs.length}</span>
             <span>endpoints documented</span>
-            <span className="mx-2">•</span>
-            <span className="font-medium">{diagrams.length}</span>
-            <span>diagrams generated</span>
           </div>
           <div>
-            {isGeneratingDocs || isGeneratingGraphs ? (
+            {isGeneratingDocs ? (
               <span className="flex items-center">
                 <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                {isGeneratingDocs ? "Analyzing repository..." : "Generating graphs..."}
+                Analyzing repository...
               </span>
-            ) : docs.length > 0 || diagrams.length > 0 ? (
+            ) : docs.length > 0 ? (
               <span>Content generated successfully</span>
             ) : (
               <span>Ready to generate content</span>

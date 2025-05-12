@@ -80,7 +80,7 @@ const Navbar = () => {
 
                 <div className="hidden lg:ml-auto lg:flex lg:items-center lg:space-x-10">
                     {session ? (
- <Link href="/dashboard" passHref>
+ <Link href="/dashboard/documentation" passHref>
  <p
      className="inline-flex items-center justify-center px-4 py-2 text-base leading-7 text-white transition-all duration-200 bg-gray-900 border border-transparent rounded-xl hover:bg-gray-600 font-pj focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
      role="button"

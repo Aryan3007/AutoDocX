@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import {  FileText, Search, SlidersHorizontal } from "lucide-react"
+import { FileText, Search, SlidersHorizontal } from "lucide-react"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/sheet"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import ImportRepoDialog from "@/components/ImportRepoDialog"
 
 // Mock data for documentation
 const allDocs = [
@@ -47,20 +46,20 @@ const allDocs = [
 
 type Documentation = {
   id: string
-    repo_name: string
-    description: string
-    generated: string
-    endpoints: number
-    created_at: number
-    status: string
-    metadata: {
-      repo_description: string
-      repo_language: string
-      language: string
-      generated_at: string
-      endpoints_count: number
-      categories: string[]
-    }
+  repo_name: string
+  description: string
+  generated: string
+  endpoints: number
+  created_at: number
+  status: string
+  metadata: {
+    repo_description: string
+    repo_language: string
+    language: string
+    generated_at: string
+    endpoints_count: number
+    categories: string[]
+  }
 }
 type SortField = "projectName" | "language" | "generated" | "endpoints" | "models" | "status"
 type SortDirection = "asc" | "desc"
@@ -181,13 +180,9 @@ export default function DocumentationPage() {
 
 
   return (
-    <div className="container mx-auto py-6 px-4 md:px-6 max-w-6xl">
+    <div className="container mx-auto py-6 px-4 md:px-6 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
-      
-
         <h2 className="md:text-3xl text-xl font-bold tracking-tight">My Documentations</h2>
-        <ImportRepoDialog/>
-    
         
       </div>
 
@@ -204,126 +199,126 @@ export default function DocumentationPage() {
               setCurrentPage(1) // Reset to first page when search changes
             }}
           />
-          
+
         </div>
-        
+
         <div className="flex items-center gap-2 w-full md:w-auto">
-        <div className="flex items-center gap-2">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm">
-                <SlidersHorizontal className="mr-2 h-4 w-4" />
-                Filters
-                {(languageFilter.length > 0 || statusFilter.length > 0) && (
-                  <Badge variant="secondary" className="ml-2 rounded-full px-1 text-xs">
-                    {languageFilter.length + statusFilter.length}
-                  </Badge>
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[400px] sm:w-[540px] p-6">
-              <SheetHeader className="mb-5">
-              <SheetTitle className="text-2xl">Filters</SheetTitle>
-              <SheetDescription className="text-sm text-muted-foreground">
-                Refine your documentation results using the filters below.
-              </SheetDescription>
-              </SheetHeader>
-
-              <div className="space-y-6">
-              {/* Language Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold">Programming Language</h3>
-                <span className="text-sm text-muted-foreground">
-                  {languageFilter.length} selected
-                </span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                {languages.map((language) => (
-                  <div
-                  key={language}
-                  className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-accent"
-                  >
-                  <Checkbox
-                    id={`language-${language}`}
-                    checked={languageFilter.includes(language)}
-                    onCheckedChange={() => toggleLanguageFilter(language)}
-                  />
-                  <Label
-                    htmlFor={`language-${language}`}
-                    className="flex-1 cursor-pointer font-medium"
-                  >
-                    {language}
-                  </Label>
-                  </div>
-                ))}
-                </div>
-              </div>
-
-              {/* Status Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between"></div>
-                <h3 className="text-base font-semibold">Documentation Status</h3>
-                <span className="text-sm text-muted-foreground">
-                  {statusFilter.length} selected
-                </span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                {statuses.map((status) => (
-                  <div
-                  key={status}
-                  className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-accent"
-                  >
-                  <Checkbox
-                    id={`status-${status}`}
-                    checked={statusFilter.includes(status)}
-                    onCheckedChange={() => toggleStatusFilter(status)}
-                  />
-                  <Label
-                    htmlFor={`status-${status}`}
-                    className="flex-1 cursor-pointer font-medium"
-                  >
-                    {status}
-                  </Label>
-                  </div>
-                ))}
-                </div>
-              </div>
-              
-
-              <SheetFooter className="mt-8 flex-row gap-3">
-              <SheetClose asChild>
-                <Button variant="outline" onClick={clearFilters} className="flex-1">
-                Reset
+          <div className="flex items-center gap-2">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Filters
+                  {(languageFilter.length > 0 || statusFilter.length > 0) && (
+                    <Badge variant="secondary" className="ml-2 rounded-full px-1 text-xs">
+                      {languageFilter.length + statusFilter.length}
+                    </Badge>
+                  )}
                 </Button>
-              </SheetClose>
-              <SheetClose asChild>
-                <Button className="flex-1">Apply Filters</Button>
-              </SheetClose>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
-        </div>
-        <div className="bg-white">
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[400px] sm:w-[540px] p-6">
+                <SheetHeader className="mb-5">
+                  <SheetTitle className="text-2xl">Filters</SheetTitle>
+                  <SheetDescription className="text-sm text-muted-foreground">
+                    Refine your documentation results using the filters below.
+                  </SheetDescription>
+                </SheetHeader>
 
-          <Select
-            value={itemsPerPage.toString()}
-            onValueChange={(value) => {
-              setItemsPerPage(Number.parseInt(value))
-              setCurrentPage(1) // Reset to first page when items per page changes
-            }}
+                <div className="space-y-6">
+                  {/* Language Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-semibold">Programming Language</h3>
+                      <span className="text-sm text-muted-foreground">
+                        {languageFilter.length} selected
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {languages.map((language) => (
+                        <div
+                          key={language}
+                          className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-accent"
+                        >
+                          <Checkbox
+                            id={`language-${language}`}
+                            checked={languageFilter.includes(language)}
+                            onCheckedChange={() => toggleLanguageFilter(language)}
+                          />
+                          <Label
+                            htmlFor={`language-${language}`}
+                            className="flex-1 cursor-pointer font-medium"
+                          >
+                            {language}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Status Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between"></div>
+                    <h3 className="text-base font-semibold">Documentation Status</h3>
+                    <span className="text-sm text-muted-foreground">
+                      {statusFilter.length} selected
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {statuses.map((status) => (
+                      <div
+                        key={status}
+                        className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-accent"
+                      >
+                        <Checkbox
+                          id={`status-${status}`}
+                          checked={statusFilter.includes(status)}
+                          onCheckedChange={() => toggleStatusFilter(status)}
+                        />
+                        <Label
+                          htmlFor={`status-${status}`}
+                          className="flex-1 cursor-pointer font-medium"
+                        >
+                          {status}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+
+                <SheetFooter className="mt-8 flex-row gap-3">
+                  <SheetClose asChild>
+                    <Button variant="outline" onClick={clearFilters} className="flex-1">
+                      Reset
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button className="flex-1">Apply Filters</Button>
+                  </SheetClose>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
+          </div>
+          <div className="bg-white">
+
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => {
+                setItemsPerPage(Number.parseInt(value))
+                setCurrentPage(1) // Reset to first page when items per page changes
+              }}
             >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Rows per page" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5 per page</SelectItem>
-              <SelectItem value="10">10 per page</SelectItem>
-              <SelectItem value="15">15 per page</SelectItem>
-              <SelectItem value="20">20 per page</SelectItem>
-            </SelectContent>
-          </Select>
-            </div>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Rows per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 per page</SelectItem>
+                <SelectItem value="10">10 per page</SelectItem>
+                <SelectItem value="15">15 per page</SelectItem>
+                <SelectItem value="20">20 per page</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -361,44 +356,44 @@ export default function DocumentationPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
           <div className="col-span-full text-center text-muted-foreground">
-        Loading...
+            Loading...
           </div>
         ) : error ? (
           <div className="col-span-full text-center text-red-500">
-        {error}
+            {error}
           </div>
         ) : docs.length > 0 ? (
           docs.map((doc) => (
-        <div key={doc.id} className="rounded-md p-4 bg-white border shadow-sm">
-          <div className="mb-2">
-            <h3 className="text-lg font-bold capitalize">{doc.repo_name}</h3>
-            <p className="text-sm text-muted-foreground">{doc.metadata.repo_description || 'No description available'}</p>
-          </div>
-          <div className="mb-2">
-            <Badge variant="outline">{doc.metadata.language}</Badge>
-          </div>
-          <div className="text-sm text-muted-foreground mb-2">
-            <p>Generated: {new Date(doc.metadata.generated_at).toLocaleDateString()}</p>
-            <p>Endpoints: {doc.metadata.endpoints_count}</p>
-            <p>Categories: {doc.metadata.categories.length}</p>
-          </div>
-          <div className="mb-2">
-            <Badge variant={getStatusBadgeVariant(doc.status)}>{doc.status}</Badge>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" asChild>
-          <Link href={`/dashboard/documentation/${doc.id}`}>
-            <FileText className="h-4 w-4" />
-            <span className="sr-only md:not-sr-only md:ml-2">View Documentation</span>
-          </Link>
-            </Button>
-           
-          </div>
-        </div>
+            <div key={doc.id} className="rounded-md p-4 bg-white border shadow-sm">
+              <div className="mb-2">
+                <h3 className="text-lg font-bold capitalize">{doc.repo_name}</h3>
+                <p className="text-sm text-muted-foreground">{doc.metadata.repo_description || 'No description available'}</p>
+              </div>
+              <div className="mb-2">
+                <Badge variant="outline">{doc.metadata.language}</Badge>
+              </div>
+              <div className="text-sm text-muted-foreground mb-2">
+                <p>Generated: {new Date(doc.metadata.generated_at).toLocaleDateString()}</p>
+                <p>Endpoints: {doc.metadata.endpoints_count}</p>
+                <p>Categories: {doc.metadata.categories.length}</p>
+              </div>
+              <div className="mb-2">
+                <Badge variant={getStatusBadgeVariant(doc.status)}>{doc.status}</Badge>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/dashboard/documentation/${doc.id}`}>
+                    <FileText className="h-4 w-4" />
+                    <span className="sr-only md:not-sr-only md:ml-2">View Documentation</span>
+                  </Link>
+                </Button>
+
+              </div>
+            </div>
           ))
         ) : (
           <div className="col-span-full text-center text-muted-foreground">
-        No documentation found.
+            No documentation found.
           </div>
         )}
       </div>

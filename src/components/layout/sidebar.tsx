@@ -1,7 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { X, Home, FileText } from "lucide-react"
+import { X, FileText } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -9,6 +9,8 @@ import { LogoutButton } from "../LogoutButton"
 import { useEffect, useState } from "react"
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import ImportRepoDialog from "../ImportRepoDialog"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 dayjs.extend(relativeTime);
 type SidebarProps = {
   isOpen: boolean
@@ -37,13 +39,13 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
       try {
         const res = await fetch("/api/documentations")
         const json = await res.json()
-
+  
         if (json.success) {
           setDocs(json.data)
         } else {
           throw new Error(json.error || "Failed to load data")
         }
-      }catch (err: unknown) {
+      } catch (err: unknown) {
         if (err instanceof Error) {
           console.log(err.message)
         } else {
@@ -51,9 +53,47 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
         }
       }
     }
-
+  
     fetchDocs()
+  
+    const channel = supabaseAdmin
+      .channel('realtime-documentations')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // can be 'INSERT', 'UPDATE', 'DELETE'
+          schema: 'public',
+          table: 'Documentations',
+        },
+        (payload) => {
+          console.log('Realtime Payload:', payload)
+  
+          if (payload.eventType === 'INSERT') {
+            setDocs((prev) => [payload.new as Documentation, ...prev])
+          }
+  
+          if (payload.eventType === 'UPDATE') {
+            setDocs((prev) =>
+              prev.map((doc) =>
+                doc.id === payload.new.id ? (payload.new as Documentation) : doc
+              )
+            )
+          }
+  
+          if (payload.eventType === 'DELETE') {
+            setDocs((prev) =>
+              prev.filter((doc) => doc.id !== payload.old.id)
+            )
+          }
+        }
+      )
+      .subscribe()
+  
+    return () => {
+      supabaseAdmin.removeChannel(channel)
+    }
   }, [])
+  
 
   return (
     <AnimatePresence>
@@ -94,19 +134,8 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
 
               <div className="flex-1 overflow-auto">
                 <div className="px-3 py-2">
-                  <nav className="space-y-1">
-                    <Link
-                      href="/dashboard"
-                      className={cn(
-                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                        pathname === "/dashboard"
-                          ? "bg-accent text-accent-foreground"
-                          : "hover:bg-accent/50 hover:text-accent-foreground",
-                      )}
-                    >
-                      <Home className="h-4 w-4" />
-                      <span>Dashboard</span>
-                    </Link>
+                  <nav className="space-y-2">
+                   <ImportRepoDialog/>
                     <Link
                       href="/dashboard/documentation"
                       className={cn(

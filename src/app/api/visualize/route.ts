@@ -226,98 +226,48 @@ export async function POST(request: NextRequest) {
         // Define the prompt for React Flow flowchart
         const prompt = `You are a software architecture assistant.
 
-Given the following backend analysis:
+Given this backend analysis:
 - Models: ${JSON.stringify(preprocessData.models, null, 2)}
 - Controllers: ${JSON.stringify(preprocessData.controllers, null, 2)}
 - Types: ${JSON.stringify(preprocessData.types, null, 2)}
 
-Generate a **React Flow flowchart** that comprehensively describes the entire backend system, including the request lifecycle, routers, middleware, controllers, services, models, database access, schema relationships, and data flow. Return only a JSON object with "nodes" and "edges" arrays compatible with React Flow (https://reactflow.dev/). Do not include explanations or any other text outside the JSON object.
+Generate a **React Flow** JSON object with "nodes" and "edges" arrays. Do **not** include any explanation or extra text.
 
-**Requirements for Nodes**:
-- Each node must have: "id", "data" (with a "label" field for the display name), "position" (with "x" and "y" coordinates), and "parentId" (for grouping within subgraphs, referencing a group node's ID).
-- Use "extent: 'parent'" for nodes within groups to constrain their movement.
-- Include group nodes (subgraphs) with "type: 'group'" for visual grouping of related components:
-  - "group-requests": For incoming HTTP requests (e.g., GET /users, POST /appointments).
-  - "group-routers": For Express routers.
-  - "group-middleware": For middleware (e.g., authentication, validation).
-  - "group-controllers": For controllers.
-  - "group-services": For services.
-  - "group-models": For database models.
-  - "group-database": For the database itself (e.g., MongoDB, PostgreSQL).
-- Add detailed labels in the "data.label" field:
-  - For request nodes: Include the HTTP method and path (e.g., "GET /users").
-  - For router nodes: Include the router name (e.g., "User Router").
-  - For middleware nodes: Include the middleware purpose (e.g., "Auth Middleware", "Validate Request").
-  - For controller nodes: Include the controller name and method (e.g., "User Controller: getUser").
-  - For service nodes: Include the service name and method (e.g., "User Service: findUser").
-  - For model nodes: Include the model name and fields (e.g., "User Model\nFields: id, name, email").
-  - For database nodes: Include the database type (e.g., "MongoDB").
-- Style all nodes with a professional look:
-  - Regular nodes: "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" }
-  - Group nodes: "style": { "backgroundColor": "#f5f5f5", "border": "1px dashed #9e9e9e", "borderRadius": "12px", "padding": "20px", "fontSize": "14px", "fontFamily": "Arial, sans-serif", "color": "#424242" }
-- Position nodes in a layered, horizontal layout to reflect the request lifecycle:
-  - "group-requests" at x: 0
-  - "group-routers" at x: 200
-  - "group-middleware" at x: 400
-  - "group-controllers" at x: 600
-  - "group-services" at x: 800
-  - "group-models" at x: 1000
-  - "group-database" at x: 1200
-  - Within each group, space nodes vertically (y increases by 150 per node, starting at y: 0).
-- Set group node dimensions:
-  - Each group should have "style": { ..., "width": 180, "height": (number of child nodes * 150 + 40) }
+**Structure**:
+- Use group nodes with ids:
+  - "group-requests", "group-routers", "group-middleware", "group-controllers", "group-services", "group-models", "group-database"
+- Regular nodes must include:
+  - id, data.label, position (x, y), parentId, extent: "parent", style
+- Group node style: dashed border, bg: #f5f5f5, padding 20, width 200, height = children × 200 + 40
+- Regular node style: bg: #e0f7fa, border: 1px solid #0288d1, padding 10, fontSize 12, whiteSpace: pre-wrap
 
-**Requirements for Edges**:
-- Each edge must have: "id", "source", "target", "type", and "label".
-- Use "type": "smoothstep" for smooth, professional-looking connections.
-- Style edges: "style": { "stroke": "#0288d1", "strokeWidth": 2 }, "animated": true for a dynamic effect.
-- Add "label" to describe the interaction:
-  - Between requests and routers: Use the HTTP method and path (e.g., "GET /users").
-  - Between routers and middleware: Use "applies" (e.g., "applies").
-  - Between middleware and controllers: Use "forwards" (e.g., "forwards").
-  - Between controllers and services: Use the method call (e.g., "calls findUser").
-  - Between services and models: Use the operation (e.g., "queries", "creates").
-  - Between models and database: Use the database operation (e.g., "stores", "retrieves").
-  - Between models (for schema relationships): Use the relationship type (e.g., "has many", "belongs to").
-- Style edge labels: "labelStyle": { "fontSize": "10px", "fill": "#01579b", "fontFamily": "Arial, sans-serif" }, "labelBgStyle": { "fill": "#e0f7fa", "stroke": "#0288d1", "strokeWidth": 1, "padding": 4 }
+**Layout**:
+- Group X positions:
+  - requests: 0, routers: 250, middleware: 500, controllers: 750, services: 1000, models: 1250, database: 1500
+- Inside each group: stack nodes vertically, Y = index × 200
 
-**Additional Requirements**:
-- Represent the full request lifecycle: Show how an HTTP request flows through the router, middleware, controller, service, model, and database.
-- Include middleware nodes for common middleware (e.g., authentication, validation) inferred from controller methods or types.
-- Show schema relationships between models (e.g., foreign keys, one-to-many) as edges between model nodes with labels like "has many" or "belongs to".
-- If no middleware is explicitly detected, include a placeholder "Default Middleware" node for each router.
-- Ensure all controllers, services, and models are connected appropriately based on their names and methods (e.g., UserController should connect to UserService and UserModel).
+**Node labels**:
+- Requests: "GET /users"
+- Routers: "User Router"
+- Middleware: "Auth Middleware"
+- Controllers: "UserController: getUser"
+- Services: "UserService: findUser"
+- Models: "User Model\\nFields: id, name, email"
+- DB: "MongoDB"
 
-**Example Output**:
-{
-  "nodes": [
-    { "id": "group-requests", "type": "group", "data": { "label": "HTTP Requests" }, "position": { "x": 0, "y": 0 }, "style": { "backgroundColor": "#f5f5f5", "border": "1px dashed #9e9e9e", "borderRadius": "12px", "padding": "20px", "fontSize": "14px", "fontFamily": "Arial, sans-serif", "color": "#424242", "width": 180, "height": 340 } },
-    { "id": "req-1", "data": { "label": "GET /users" }, "position": { "x": 20, "y": 40 }, "parentId": "group-requests", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } },
-    { "id": "req-2", "data": { "label": "POST /users" }, "position": { "x": 20, "y": 190 }, "parentId": "group-requests", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } },
-    { "id": "group-routers", "type": "group", "data": { "label": "Routers" }, "position": { "x": 200, "y": 0 }, "style": { "backgroundColor": "#f5f5f5", "border": "1px dashed #9e9e9e", "borderRadius": "12px", "padding": "20px", "fontSize": "14px", "fontFamily": "Arial, sans-serif", "color": "#424242", "width": 180, "height": 190 } },
-    { "id": "router-1", "data": { "label": "User Router" }, "position": { "x": 20, "y": 40 }, "parentId": "group-routers", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } },
-    { "id": "group-middleware", "type": "group", "data": { "label": "Middleware" }, "position": { "x": 400, "y": 0 }, "style": { "backgroundColor": "#f5f5f5", "border": "1px dashed #9e9e9e", "borderRadius": "12px", "padding": "20px", "fontSize": "14px", "fontFamily": "Arial, sans-serif", "color": "#424242", "width": 180, "height": 190 } },
-    { "id": "mw-1", "data": { "label": "Auth Middleware" }, "position": { "x": 20, "y": 40 }, "parentId": "group-middleware", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } },
-    { "id": "group-controllers", "type": "group", "data": { "label": "Controllers" }, "position": { "x": 600, "y": 0 }, "style": { "backgroundColor": "#f5f5f5", "border": "1px dashed #9e9e9e", "borderRadius": "12px", "padding": "20px", "fontSize": "14px", "fontFamily": "Arial, sans-serif", "color": "#424242", "width": 180, "height": 190 } },
-    { "id": "controller-1", "data": { "label": "User Controller: getUser" }, "position": { "x": 20, "y": 40 }, "parentId": "group-controllers", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } },
-    { "id": "group-services", "type": "group", "data": { "label": "Services" }, "position": { "x": 800, "y": 0 }, "style": { "backgroundColor": "#f5f5f5", "border": "1px dashed #9e9e9e", "borderRadius": "12px", "padding": "20px", "fontSize": "14px", "fontFamily": "Arial, sans-serif", "color": "#424242", "width": 180, "height": 190 } },
-    { "id": "service-1", "data": { "label": "User Service: findUser" }, "position": { "x": 20, "y": 40 }, "parentId": "group-services", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } },
-    { "id": "group-models", "type": "group", "data": { "label": "Models" }, "position": { "x": 1000, "y": 0 }, "style": { "backgroundColor": "#f5f5f5", "border": "1px dashed #9e9e9e", "borderRadius": "12px", "padding": "20px", "fontSize": "14px", "fontFamily": "Arial, sans-serif", "color": "#424242", "width": 180, "height": 340 } },
-    { "id": "model-1", "data": { "label": "User Model\nFields: id, name, email" }, "position": { "x": 20, "y": 40 }, "parentId": "group-models", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } },
-    { "id": "model-2", "data": { "label": "Post Model\nFields: id, userId, content" }, "position": { "x": 20, "y": 190 }, "parentId": "group-models", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } },
-    { "id": "group-database", "type": "group", "data": { "label": "Database" }, "position": { "x": 1200, "y": 0 }, "style": { "backgroundColor": "#f5f5f5", "border": "1px dashed #9e9e9e", "borderRadius": "12px", "padding": "20px", "fontSize": "14px", "fontFamily": "Arial, sans-serif", "color": "#424242", "width": 180, "height": 190 } },
-    { "id": "db-1", "data": { "label": "MongoDB" }, "position": { "x": 20, "y": 40 }, "parentId": "group-database", "extent": "parent", "style": { "backgroundColor": "#e0f7fa", "border": "1px solid #0288d1", "borderRadius": "8px", "padding": "10px", "fontSize": "12px", "fontFamily": "Arial, sans-serif", "color": "#01579b", "whiteSpace": "pre-wrap", "textAlign": "center" } }
-  ],
-  "edges": [
-    { "id": "e1", "source": "req-1", "target": "router-1", "type": "smoothstep", "label": "GET /users", "style": { "stroke": "#0288d1", "strokeWidth": 2 }, "animated": true, "labelStyle": { "fontSize": "10px", "fill": "#01579b", "fontFamily": "Arial, sans-serif" }, "labelBgStyle": { "fill": "#e0f7fa", "stroke": "#0288d1", "strokeWidth": 1, "padding": 4 } },
-    { "id": "e2", "source": "router-1", "target": "mw-1", "type": "smoothstep", "label": "applies", "style": { "stroke": "#0288d1", "strokeWidth": 2 }, "animated": true, "labelStyle": { "fontSize": "10px", "fill": "#01579b", "fontFamily": "Arial, sans-serif" }, "labelBgStyle": { "fill": "#e0f7fa", "stroke": "#0288d1", "strokeWidth": 1, "padding": 4 } },
-    { "id": "e3", "source": "mw-1", "target": "controller-1", "type": "smoothstep", "label": "forwards", "style": { "stroke": "#0288d1", "strokeWidth": 2 }, "animated": true, "labelStyle": { "fontSize": "10px", "fill": "#01579b", "fontFamily": "Arial, sans-serif" }, "labelBgStyle": { "fill": "#e0f7fa", "stroke": "#0288d1", "strokeWidth": 1, "padding": 4 } },
-    { "id": "e4", "source": "controller-1", "target": "service-1", "type": "smoothstep", "label": "calls findUser", "style": { "stroke": "#0288d1", "strokeWidth": 2 }, "animated": true, "labelStyle": { "fontSize": "10px", "fill": "#01579b", "fontFamily": "Arial, sans-serif" }, "labelBgStyle": { "fill": "#e0f7fa", "stroke": "#0288d1", "strokeWidth": 1, "padding": 4 } },
-    { "id": "e5", "source": "service-1", "target": "model-1", "type": "smoothstep", "label": "queries", "style": { "stroke": "#0288d1", "strokeWidth": 2 }, "animated": true, "labelStyle": { "fontSize": "10px", "fill": "#01579b", "fontFamily": "Arial, sans-serif" }, "labelBgStyle": { "fill": "#e0f7fa", "stroke": "#0288d1", "strokeWidth": 1, "padding": 4 } },
-    { "id": "e6", "source": "model-1", "target": "db-1", "type": "smoothstep", "label": "retrieves", "style": { "stroke": "#0288d1", "strokeWidth": 2 }, "animated": true, "labelStyle": { "fontSize": "10px", "fill": "#01579b", "fontFamily": "Arial, sans-serif" }, "labelBgStyle": { "fill": "#e0f7fa", "stroke": "#0288d1", "strokeWidth": 1, "padding": 4 } },
-    { "id": "e7", "source": "model-1", "target": "model-2", "type": "smoothstep", "label": "has many", "style": { "stroke": "#0288d1", "strokeWidth": 2 }, "animated": true, "labelStyle": { "fontSize": "10px", "fill": "#01579b", "fontFamily": "Arial, sans-serif" }, "labelBgStyle": { "fill": "#e0f7fa", "stroke": "#0288d1", "strokeWidth": 1, "padding": 4 } }
-  ]
-}
+**Edges**:
+- Fields: id, source, target, type: "smoothstep", label, animated: true
+- Edge labels:
+  - Request → Router: "GET /users"
+  - Router → Middleware: "applies"
+  - Middleware → Controller: "forwards"
+  - Controller → Service: "calls findUser"
+  - Service → Model: "uses"
+  - Model → DB: "queries"
+- Edge style: stroke: #0288d1, strokeWidth: 2
+
+Return only the JSON object.
+
 `
 
         // Call Gemini API to generate the flowchart
