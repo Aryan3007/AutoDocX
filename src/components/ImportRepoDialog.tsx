@@ -121,7 +121,7 @@ export default function ImportRepoDialog() {
           className="w-full justify-start gap-2 bg-black hover:bg-gray-900 hover:text-white text-white transition-colors"
         >
           <Github className="h-4 w-4" />
-          <span>Import Repository</span>
+          <span>Import New Repository</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
