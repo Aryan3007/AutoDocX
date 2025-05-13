@@ -177,7 +177,7 @@ export function Sidebar({ isOpen, setIsOpen, isMobile }: SidebarProps) {
 
               <div className="p-4 mt-auto">
                 <LogoutButton />
-                <p className="text-xs text-muted-foreground mt-1">More access to advanced features</p>
+                <p className="text-xs text-muted-foreground mt-1">AI can make mistake check importatnt info</p>
               </div>
             </div>
           </motion.aside>

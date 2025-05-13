@@ -392,7 +392,7 @@ export default function DocumentationPage() {
             </div>
           ))
         ) : (
-          <div className="col-span-full min-h-[600px] text-center text-muted-foreground">
+          <div className="col-span-full min-h-[400px] text-center flex justify-center items-center text-muted-foreground">
             No documentation found.
           </div>
         )}

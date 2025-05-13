@@ -11,7 +11,7 @@ const Navbar = () => {
             <div className="flex items-center justify-between">
                 <div className="flex-shrink-0">
                     <Link href="/" passHref>
-                        <h1 className="text-lg font-medium">
+                        <h1 className="text-xl font-medium">
                             <span className="text-red-500 font-bold">/</span>AutoDocX
                         </h1>
                     </Link>

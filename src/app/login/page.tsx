@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Github, ArrowRight, FileText, Lock } from "lucide-react"
+import { Github, FileText, Lock } from "lucide-react"
 import { signIn, useSession } from "next-auth/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -21,48 +21,9 @@ export default function LoginPage() {
     if (status === "loading") return <div>Loading...</div>;
   
   return (
-    <div className="flex min-h-screen ">
+    <div className="flex min-h-screen justify-center items-center bg-gray-50">
         {/* Right Section - Visual Element */}
-      <div className="hidden lg:block lg:w-1/2  relative overflow-hidden">
-        <div className="absolute inset-0 flex flex-col justify-center p-12">
-          <h2 className="text-4xl font-bold mb-6">
-            Transform Your Documentation Workflow
-          </h2>
-          <p className="text-xl mb-8 max-w-lg">
-            Join thousands of developers who use AutoDocX to streamline their API documentation process
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-2 flex items-center">
-                <span className="bg-primary/20 p-1 rounded mr-2 inline-flex">
-                  <ArrowRight className="h-4 w-4 text-primary" />
-                </span>
-                Quick Setup
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Connect your GitHub account and start generating documentation in minutes
-              </p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-medium mb-2 flex items-center">
-                <span className="bg-primary/20 p-1 rounded mr-2 inline-flex">
-                  <ArrowRight className="h-4 w-4 text-primary" />
-                </span>
-                AI-Powered
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Leverage advanced AI to analyze your codebase and generate comprehensive documentation
-              </p>
-            </div>
-          </div>
-          
-          <div className="absolute bottom-8 left-12 flex items-center space-x-4">
-            <p className="font-medium">Built by developers for the developers</p>
-           
-          </div>
-        </div>
-      </div>
+     
       {/* Left Section - Login Card */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <Card className="w-full max-w-2xl  border-0">
