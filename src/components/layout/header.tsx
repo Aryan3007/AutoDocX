@@ -1,9 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { PanelLeft, Share2, MoreVertical } from "lucide-react"
+import { PanelLeft } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
@@ -59,35 +58,7 @@ console.log(session);
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Share2 className="h-5 w-5" />
-                <span className="sr-only">Share</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Share documentation</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5" />
-                <span className="sr-only">More options</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => console.log("Archive clicked")}>
-                Archive
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => console.log("Delete clicked")} className="text-red-500">
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TooltipProvider>
+       
     
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

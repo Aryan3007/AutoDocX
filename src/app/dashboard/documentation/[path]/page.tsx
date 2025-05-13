@@ -965,7 +965,7 @@ export default function ApiDocumentation() {
               </span>
             ) : docs.length > 0 ? (
               <span className="text-green-600">
-              Documentation loaded successfully from latest commit
+              Documentation loaded successfully 
               </span>
             ) : (
               <span>Failed to load documentation</span>
